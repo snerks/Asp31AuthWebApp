@@ -8,11 +8,11 @@ using Microsoft.Extensions.Options;
 
 namespace Asp31AuthWebApp.IntegrationTest
 {
-    public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+    public class TestAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
         private readonly IList<Claim> _claims;
 
-        public TestAuthHandler(
+        public TestAuthenticationHandler(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
@@ -24,13 +24,16 @@ namespace Asp31AuthWebApp.IntegrationTest
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            var identity = new ClaimsIdentity(_claims, "Test");
-            var principal = new ClaimsPrincipal(identity);
-            var ticket = new AuthenticationTicket(principal, "Test");
+            const string TestAuthenticationType = "Test";
+            const string TestAuthenticationScheme = "Test";
 
-            var result = AuthenticateResult.Success(ticket);
+            var claimsIdentity = new ClaimsIdentity(_claims, TestAuthenticationType);
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+            var authenticationTicket = new AuthenticationTicket(claimsPrincipal, TestAuthenticationScheme);
 
-            return Task.FromResult(result);
+            var authenticateResult = AuthenticateResult.Success(authenticationTicket);
+
+            return Task.FromResult(authenticateResult);
         }
     }
 }

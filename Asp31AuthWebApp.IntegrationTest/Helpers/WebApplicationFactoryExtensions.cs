@@ -9,28 +9,36 @@ namespace Asp31AuthWebApp.IntegrationTest
 {
     public static class WebApplicationFactoryExtensions
     {
-        public static WebApplicationFactory<T> WithAuthentication<T>(this WebApplicationFactory<T> factory, TestClaimsProvider claimsProvider) where T : class
+        private const string TestAuthenticationScheme = "Test";
+
+        public static WebApplicationFactory<T> WithAuthentication<T>(
+            this WebApplicationFactory<T> factory,
+            TestClaimsProvider claimsProvider) where T : class
         {
             return factory.WithWebHostBuilder(builder =>
             {
                 builder.ConfigureTestServices(services =>
                 {
-                    services.AddAuthentication("Test")
-                            .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", op => { });
+                    services.AddAuthentication(TestAuthenticationScheme)
+                            .AddScheme<AuthenticationSchemeOptions, TestAuthenticationHandler>(TestAuthenticationScheme, op => { });
 
                     services.AddScoped<TestClaimsProvider>(_ => claimsProvider);
                 });
             });
         }
 
-        public static HttpClient CreateClientWithTestAuth<T>(this WebApplicationFactory<T> factory, TestClaimsProvider claimsProvider) where T : class
+        public static HttpClient CreateClientWithTestAuth<T>(
+            this WebApplicationFactory<T> factory,
+            TestClaimsProvider claimsProvider) where T : class
         {
-            var client = factory.WithAuthentication(claimsProvider).CreateClient(new WebApplicationFactoryClientOptions
-            {
-                AllowAutoRedirect = false
-            });
+            var client =
+                factory.WithAuthentication(claimsProvider)
+                       .CreateClient(new WebApplicationFactoryClientOptions
+                       {
+                           AllowAutoRedirect = false
+                       });
 
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(TestAuthenticationScheme);
 
             return client;
         }
